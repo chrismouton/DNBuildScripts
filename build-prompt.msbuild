@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- local msbuild script -->
+<Project DefaultTargets="PromptUser" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+
+    <UsingTask TaskName="SmartPromptTask"  AssemblyFile="Tools\Build\Solidsoft.MsBuildTasks.dll" />
+
+    <!-- Properties -->
+    <PropertyGroup>
+        <CrLf>%0D%0A</CrLf>
+    </PropertyGroup>
+
+    <!-- Targets -->
+
+    <Target Name="PromptUser">
+        <SmartPromptTask
+                Title="Choose Target:(CrLf)"
+                Prompt="A) Publish (CrLf)B) Build (CrLf)C) Clean (CrLf)D) Install"
+                ValidResponses="A:Publish|B:Build|C:Clean|D:Install">
+            <Output TaskParameter="Response" PropertyName="TargetValue" />
+        </SmartPromptTask>
+
+        <SmartPromptTask
+                Condition="'$(TargetValue)' != 'Install'"
+                Title="Choose Configuration:(CrLf)"
+                Prompt="A) Debug (CrLf)B) Release"
+                ValidResponses="A:Debug|B:Release">
+            <Output TaskParameter="Response" PropertyName="ConfigurationValue" />
+        </SmartPromptTask>
+
+        <SmartPromptTask
+                Condition="'$(TargetValue)' != 'Install'"
+                Title="Choose Platform:(CrLf)"
+                Prompt="A) Any CPU (CrLf)B) x64"
+                ValidResponses="A:Any CPU|B:x64">
+            <Output TaskParameter="Response" PropertyName="PlatformValue" />
+        </SmartPromptTask>
+
+        <Message Text="Chosen settings: TargetValue=$(TargetValue), ConfigurationValue=$(ConfigurationValue), PlatformValue=$(PlatformValue), " />
+        
+        <MSBuild
+            Projects="build.msbuild"
+            Properties="Configuration=$(ConfigurationValue);Platform=$(PlatformValue)"
+            Targets="$(TargetValue)"
+            ContinueOnError="false"
+            StopOnFirstFailure="true" />
+    </Target>
+</Project>

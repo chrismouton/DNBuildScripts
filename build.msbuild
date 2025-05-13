@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- local msbuild script -->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+
+  <!-- Properties -->
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)' == ''" >Debug</Configuration>
+    <Platform Condition="'$(Platform)' == '' OR '$(Platform)' == 'AnyCPU'" >Any CPU</Platform>
+    <BuildInParallel Condition="'$(BuildInParallel)' == ''">false</BuildInParallel>
+    <SolutionRoot>$(MSBuildProjectDirectory)</SolutionRoot>
+    <PublishDir>$(MSBuildProjectDirectory)\publish\</PublishDir>
+    <DatabaseScriptsDir>$(PublishDir)DatabaseScripts</DatabaseScriptsDir>
+  </PropertyGroup>
+
+  <Import Project="Build/AnyCPU/projects.msbuild" />
+
+  <!-- Targets -->
+
+  <!-- ****************************************************** -->
+  <Target Name="Build">
+    <MSBuild
+      Condition="'@(SolutionToBuild)' != ''"
+      Projects="@(SolutionToBuild)"
+      Properties="Configuration=$(Configuration);Platform=$(Platform);BuildingFromCommandLine=true"
+      BuildInParallel="$(BuildInParallel)"
+      Targets="Build"
+      StopOnFirstFailure="true"/>
+  </Target>
+
+  <!-- ****************************************************** -->
+  <Target Name="Rebuild">
+    <MSBuild
+      Condition="'@(SolutionToBuild)' != ''"
+      Projects="@(SolutionToBuild)"
+      Properties="Configuration=$(Configuration);Platform=$(Platform);BuildingFromCommandLine=true"
+      BuildInParallel="$(BuildInParallel)"
+      Targets="Rebuild"
+      StopOnFirstFailure="true"/>
+  </Target>
+
+  <!-- ****************************************************** -->
+  <Target Name="Clean">
+    <RemoveDir Directories="$(PublishDir)"/>
+    <MSBuild
+      Condition="'@(SolutionToBuild)' != ''"
+      Projects="@(SolutionToBuild)"
+      Properties="Configuration=$(Configuration);Platform=$(Platform);BuildingFromCommandLine=true"
+      Targets="Clean"
+      StopOnFirstFailure="true"/>
+  </Target>
+
+  <!-- ****************************************************** -->
+  <Target Name="PrePublish">
+    <RemoveDir Directories="$(PublishDir)"/>
+    <MakeDir Directories="$(PublishDir)"/>
+  </Target>
+
+  <!-- ****************************************************** -->
+  <Target Name="Publish" DependsOnTargets="PrePublish">
+    <CreateProperty Value="$(PublishDir)" >
+      <Output TaskParameter="Value" PropertyName="OutDir"/>
+    </CreateProperty>
+
+    <MSBuild
+      Condition="'@(SolutionToBuild)' != ''"
+      Projects="@(SolutionToBuild)"
+      Properties="Configuration=$(Configuration);Platform=$(Platform);BuildingFromCommandLine=true;OutDir=$(OutDir)"
+      BuildInParallel="$(BuildInParallel)"
+      Targets="Build"
+      StopOnFirstFailure="true"/>
+
+    <MSBuild
+      Projects="DLR.TIL.Database\DLR.TIL.Database.dbproj"
+      Properties="Configuration=$(Configuration);Platform=$(Platform);OutDir=$(OutDir);BuildingFromCommandLine=true"
+      BuildInParallel="False"
+      Targets="Deploy"
+      StopOnFirstFailure="true"/>
+    
+    <!-- touch assemblies so they have current modified date/time -->
+    <CreateItem Include="$(PublishDir)**\*.*">
+      <Output ItemName="FilesToTouch" TaskParameter="Include" />
+    </CreateItem>
+    <Touch Files="@(FilesToTouch)" ForceTouch="true" ContinueOnError="true" />
+  </Target>
+
+  <Target Name="Install">
+    <MSBuild Projects="build-installers.msbuild" ContinueOnError="false" StopOnFirstFailure="true" />
+  </Target>
+</Project>

@@ -1,0 +1,10 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <SolutionToBuild Include="$(SolutionRoot)\DLR.TIL.Database\DLR.TIL.Database.sln" />
+    <SolutionToBuild Include="$(SolutionRoot)\DLR.TIL.BusA\DLR.TIL.BusA.sln" />
+    <SolutionToBuild Include="$(SolutionRoot)\DLR.TIL.BusB\DLR.TIL.BusB.sln" />
+    <SolutionToBuild Include="$(SolutionRoot)\DLR.TIL.Dell.Service\DLR.TIL.Dell.Service.sln" />
+    <SolutionToBuild Include="$(SolutionRoot)\DLR.TIL.Portal\DLR.TIL.Portal.sln" />
+    <SolutionToBuild Include="$(SolutionRoot)\Deployment\Deployment.sln" />
+  </ItemGroup>
+</Project>

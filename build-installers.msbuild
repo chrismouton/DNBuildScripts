@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- local msbuild for generating installers script -->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+
+  <UsingTask TaskName="PromptTask" AssemblyFile="Tools\Build\Solidsoft.MsBuildTasks.dll" />
+
+  <!-- Properties -->
+  <PropertyGroup>
+    <Platform Condition="'$(Platform)' == ''" >x86</Platform>
+    <SolutionRoot>$(MSBuildProjectDirectory)</SolutionRoot>
+    <DropLocation Condition=" '$(DropLocation)' == '' ">$(SolutionRoot)\publish</DropLocation>
+    <MajorVersion>1</MajorVersion>
+    <MinorVersion>0</MinorVersion>
+    <BuildNumber>0</BuildNumber>
+    <RevisionNumber>0</RevisionNumber>
+    <ProgramFilesLocation>"C:\Program Files"</ProgramFilesLocation>
+    <CommonProgramFilesLocation>"C:\Program Files\Common Files"</CommonProgramFilesLocation>  
+</PropertyGroup>
+
+  <!-- Override to allow a developer to set the location where all program files are installed-->
+  <Choose>
+    <When Condition="Exists($(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\Solidsoft@CommonProgramFilesLocation))">
+      <PropertyGroup>
+        <CommonProgramFilesLocation>$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\Solidsoft@CommonProgramFilesLocation)</CommonProgramFilesLocation>      
+    </PropertyGroup>
+    </When>
+  </Choose>
+  <Choose>
+    <When Condition="Exists($(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\Solidsoft@ProgramFilesLocation))">
+      <PropertyGroup>
+        <ProgramFilesLocation>$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\Solidsoft@ProgramFilesLocation)</ProgramFilesLocation>
+      </PropertyGroup>
+    </When>
+  </Choose>
+
+  <!-- Targets -->
+
+  <!-- ****************************************************** -->
+  <Target Name="Build">
+    <!-- check whether we have created the build output -->
+    <Error Text="'publish' directory not found. Run a 'build Publish Release' first." Condition="!Exists('$(DropLocation)')" />
+
+    <MSBuild Projects="$(SolutionRoot)\Deployment\Deployment.sln"
+         Properties="Platform=WiX;Configuration=Release;BinariesOutputBasePath=$(DropLocation);BuildDropBasePath=$(DropLocation);SourceFileBasePath=$(SolutionRoot);OutputPath=$(DropLocation)\setup" />
+
+    <MSBuild Projects="$(SolutionRoot)\DLR.TIL.BusB\DLR.TIL.BusB.Deployment\DLR.TIL.BusB.Deployment.btdfproj"
+             Targets="Installer"
+         Properties="Platform=Any CPU;Configuration=Debug;BinariesOutputBasePath=$(DropLocation);BuildDropBasePath=$(DropLocation);SourceFileBasePath=$(SolutionRoot);OutputPath=$(DropLocation)\setup" />
+
+    <Message Text="Installers can be found in '$(DropLocation)\setup'" />
+  </Target>
+
+</Project>
